@@ -1,0 +1,98 @@
+import joblib
+import pandas as pd
+import time
+from fastapi import FastAPI,Depends,HTTPException,status,BackgroundTasks
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from jose import jwt,JWTError
+import models,auth,database,schemas
+from database import SessionLocal,engine,get_db
+from services.notifier import send_discord_notification
+
+
+app=FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
+
+try:
+    ml_model=joblib.load("bgl_logistic_model.pkl")
+except:
+    ml_model=None
+
+oauth2_scheme=OAuth2PasswordBearer(tokenUrl="login")
+
+def get_current_user(token:str=Depends(oauth2_scheme)):
+    try:
+        payload=jwt.decode(token,auth.SECRET_KEY,algorithms=[auth.ALGOLITHM])
+        username:str=payload.get("sub")
+        if username is None:
+            raise
+        HTTPException(status_code=401,detail="無効なトークンです")
+        return username
+    except JWTError:
+        raise HTTPException(status_code=401,detail="認証に失敗しました")
+ 
+ #サインアップ   
+@app.post("/signup")
+def login(username:str,password:str,db:Session=Depends(database.get_db)):
+    user=models.User(username=username,hashed_password=auth.get_password_hash(password))
+    db.add(user)
+    db.commit()
+    return {"status":"success"}
+
+#ログイン
+@app.post("/login")
+def login(username:str,password:str,db:Session=Depends(database.get_db)):
+    user=db.query(models.User).filter(models.User.username==username).first()
+    if not user or not auth.verify_password(password,user.hashed_password):
+        raise HTTPException(status_code=401,detail="名前かパスワードが違います")
+    token=auth.create_access_token({"sub":user.username})
+    return{"access_token":token,"token_type":"bearer"}
+    
+#ログ投稿
+@app.post("/logs")
+def create_log(
+    log_in: schemas.LogCreate,
+    background_tasks: BackgroundTasks,
+    db: Session=Depends(database.get_db),
+    current_user: str=Depends(get_current_user)
+):
+    
+    input_data=pd.DataFrame([{
+        "timestamp": int(time.time()),
+        "node": log_in.source,
+        "content": log_in.message
+    }])
+
+    #推論
+    is_anomaly=False
+    if ml_model:
+        input_data=input_data[['timestamp','node','content']]
+        prediction=ml_model.predict(input_data)[0]
+        is_anomaly=True if prediction==1 else False
+    
+    #異常なら通知を実行
+    if is_anomaly:
+        background_tasks.add.task(
+            send_discord_notification,
+            message=log_in.message,
+            source=log_in.source
+        )
+
+    #DBへ保存
+    db_log=models.Log(
+        message=log_in.message,
+        source=log_in.source,
+        is_anomaly=is_anomaly
+    )
+    db.add(db_log)
+    db.commit()
+    db.refresh(db_log)
+
+    return {"status":"success","is_anomaly":is_anomaly,"user":current_user}
+
+@app.get("/logs/")
+def read_logs(db:Session=Depends(get_db)):
+    return db.query(models.Log).all()
+
+
