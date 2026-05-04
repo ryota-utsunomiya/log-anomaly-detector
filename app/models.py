@@ -1,12 +1,12 @@
 from sqlalchemy import Column,Integer,String,DateTime,Boolean
 from datetime import datetime,timezone
-from database import Base
+from.database import Base
 
 class User(Base):
     __tablename__="users"
     
     id=Column(Integer,primary_key=True,index=True)
-    username=Column(String,Unique=True,index=True)
+    username=Column(String,unique=True,index=True)
     hashed_password=Column(String)
 
 class Log(Base):

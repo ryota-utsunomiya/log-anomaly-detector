@@ -2,12 +2,12 @@ import joblib
 import pandas as pd
 import time
 from fastapi import FastAPI,Depends,HTTPException,status,BackgroundTasks
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt,JWTError
-import models,auth,database,schemas
-from database import SessionLocal,engine,get_db
-from services.notifier import send_discord_notification
+from . import models,auth,database,schemas
+from .database import SessionLocal, engine, get_db
+from .services.notifier import send_discord_notification
 
 
 app=FastAPI()
@@ -23,7 +23,7 @@ oauth2_scheme=OAuth2PasswordBearer(tokenUrl="login")
 
 def get_current_user(token:str=Depends(oauth2_scheme)):
     try:
-        payload=jwt.decode(token,auth.SECRET_KEY,algorithms=[auth.ALGOLITHM])
+        payload=jwt.decode(token,auth.SECRET_KEY,algorithms=[auth.ALGORITHM])
         username:str=payload.get("sub")
         if username is None:
             raise
@@ -42,9 +42,9 @@ def login(username:str,password:str,db:Session=Depends(database.get_db)):
 
 #ログイン
 @app.post("/login")
-def login(username:str,password:str,db:Session=Depends(database.get_db)):
-    user=db.query(models.User).filter(models.User.username==username).first()
-    if not user or not auth.verify_password(password,user.hashed_password):
+def login(form_data: OAuth2PasswordRequestForm=Depends(),db:Session=Depends(database.get_db)):
+    user=db.query(models.User).filter(models.User.username==form_data.username).first()
+    if not user or not auth.verify_password(form_data.password,user.hashed_password):
         raise HTTPException(status_code=401,detail="名前かパスワードが違います")
     token=auth.create_access_token({"sub":user.username})
     return{"access_token":token,"token_type":"bearer"}
@@ -57,6 +57,7 @@ def create_log(
     db: Session=Depends(database.get_db),
     current_user: str=Depends(get_current_user)
 ):
+  
     
     input_data=pd.DataFrame([{
         "timestamp": int(time.time()),
@@ -88,7 +89,6 @@ def create_log(
     db.add(db_log)
     db.commit()
     db.refresh(db_log)
-
     return {"status":"success","is_anomaly":is_anomaly,"user":current_user}
 
 @app.get("/logs/")
