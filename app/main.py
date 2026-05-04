@@ -73,8 +73,8 @@ def create_log(
         is_anomaly=True if prediction==1 else False
     
     #異常なら通知を実行
-    if is_anomaly:
-        background_tasks.add.task(
+    if is_anomary:
+        background_tasks.add_task(
             send_discord_notification,
             message=log_in.message,
             source=log_in.source
