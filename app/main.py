@@ -66,6 +66,7 @@ def create_log(
     }])
 
     #推論
+    is_anomaly=True
     
     if ml_model:
         input_data=input_data[['timestamp','node','content']]
