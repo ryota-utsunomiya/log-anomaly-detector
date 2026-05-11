@@ -69,6 +69,7 @@ def create_log(
     is_anomaly=True
     
     if ml_model:
+        print("Model loaded successfully!")
         input_data=input_data[['timestamp','node','content']]
         prediction=ml_model.predict(input_data)[0]
         is_anomaly=True if prediction==1 else False
