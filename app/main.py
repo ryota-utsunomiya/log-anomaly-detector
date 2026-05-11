@@ -8,17 +8,23 @@ from jose import jwt,JWTError
 from . import models,auth,database,schemas
 from .database import SessionLocal, engine, get_db
 from .services.notifier import send_discord_notification
+import os
 
 
 app=FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
+base_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(base_dir, "ml", "bgl_logistic_model.pkl")
+
 try:
-    ml_model=joblib.load("ml/bgl_logistic_model.pkl")
+    print(f"DEBUG: Trying to load model from: {model_path}") # これでどこを探してるか分かります
+    ml_model = joblib.load(model_path)
+    print("✅ SUCCESS: Model loaded successfully!")
 except Exception as e:
-    print(f"Error:model load failed:{e}")
-    ml_model=None
+    print(f"❌ ERROR: Model load failed: {e}")
+    ml_model = None
 
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="login")
 
