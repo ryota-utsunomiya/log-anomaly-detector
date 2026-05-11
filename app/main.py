@@ -15,7 +15,7 @@ app=FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
 try:
-    ml_model=joblib.load("bgl_logistic_model.pkl")
+    ml_model=joblib.load("ml/bgl_logistic_model.pkl")
 except:
     ml_model=None
 
