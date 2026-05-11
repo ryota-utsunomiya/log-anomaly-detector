@@ -1,5 +1,7 @@
 # AI Log Anomaly Detector
 
+URL http://54.175.216.54:8000/docs
+
 AI(機械学習)を用いてシステムログの異常をリアルタイムに検知し、Discordへ通知するバックエンドシステムです。
 
 ##概要
