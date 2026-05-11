@@ -16,7 +16,8 @@ models.Base.metadata.create_all(bind=engine)
 
 try:
     ml_model=joblib.load("ml/bgl_logistic_model.pkl")
-except:
+except Exception as e:
+    print(f"Error:model load failed:{e}")
     ml_model=None
 
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="login")
