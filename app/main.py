@@ -90,7 +90,7 @@ def create_log(
             source=log_in.source
         )
     else:
-    print("DEBUG: Normal log. No notification sent.")
+        print("DEBUG: Normal log. No notification sent.")
     
     
     #DBへ保存
