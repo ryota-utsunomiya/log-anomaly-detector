@@ -78,7 +78,7 @@ def create_log(
         print("Model loaded successfully!")
         input_data=input_data[['content','node']]
         prediction=ml_model.predict(input_data)[0]
-        is_anomaly=True if int(prediction)==0 else False
+        is_anomaly=True if int(prediction)==1 else False
         print(f"DEBUG: prediction_raw={prediction}, is_anomaly={is_anomaly}")
         
     #異常なら通知を実行
