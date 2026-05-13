@@ -67,8 +67,7 @@ def create_log(
   
     
     input_data=pd.DataFrame([{
-        "content": log_in.message,
-        "node": log_in.source
+        "content": log_in.message
     }])
 
     #推論
@@ -76,7 +75,7 @@ def create_log(
     
     if ml_model:
         print("Model loaded successfully!")
-        input_data=input_data[['content','node']]
+        input_data=input_data[['content']]
         probabilities = ml_model.predict_proba(input_data)[0]
         print(f"DEBUG: Probabilities: Normal={probabilities[0]:.4f}, Anomaly={probabilities[1]:.4f}")
         prediction=ml_model.predict(input_data)[0]
