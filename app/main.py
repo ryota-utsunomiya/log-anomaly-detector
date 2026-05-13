@@ -77,6 +77,8 @@ def create_log(
     if ml_model:
         print("Model loaded successfully!")
         input_data=input_data[['content','node']]
+        probabilities = ml_model.predict_proba(input_df)[0]
+        print(f"DEBUG: Probabilities: Normal={probabilities[0]:.4f}, Anomaly={probabilities[1]:.4f}")
         prediction=ml_model.predict(input_data)[0]
         is_anomaly=True if int(prediction)==1 else False
         print(f"DEBUG: prediction_raw={prediction}, is_anomaly={is_anomaly}")
