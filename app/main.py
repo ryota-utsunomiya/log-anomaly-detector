@@ -79,16 +79,20 @@ def create_log(
         input_data=input_data[['content','node']]
         prediction=ml_model.predict(input_data)[0]
         is_anomaly=True if int(prediction)==1 else False
-        
+        print(f"DEBUG: prediction_raw={prediction}, is_anomaly={is_anomaly}")
         
     #異常なら通知を実行
     if is_anomaly:
+        print("DEBUG: Anomaly detected! Sending Discord notification...")
         background_tasks.add_task(
             send_discord_notification,
             message=log_in.message,
             source=log_in.source
         )
-
+    else:
+    print("DEBUG: Normal log. No notification sent.")
+    
+    
     #DBへ保存
     db_log=models.Log(
         message=log_in.message,
