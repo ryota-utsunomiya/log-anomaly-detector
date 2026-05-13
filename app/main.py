@@ -67,19 +67,18 @@ def create_log(
   
     
     input_data=pd.DataFrame([{
-        "timestamp": int(time.time()),
-        "node": log_in.source,
-        "content": log_in.message
+        "content": log_in.massage,
+        "node": log_in.source
     }])
 
     #推論
-    is_anomaly=True
+    is_anomaly=False
     
     if ml_model:
         print("Model loaded successfully!")
         input_data=input_data[['timestamp','node','content']]
         prediction=ml_model.predict(input_data)[0]
-        is_anomaly=True if prediction==1 else False
+        is_anomaly=True if int(prediction)==1 else False
         
         
     #異常なら通知を実行
