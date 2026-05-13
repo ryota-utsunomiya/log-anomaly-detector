@@ -67,7 +67,7 @@ def create_log(
   
     
     input_data=pd.DataFrame([{
-        "content": log_in.massage,
+        "content": log_in.message,
         "node": log_in.source
     }])
 
