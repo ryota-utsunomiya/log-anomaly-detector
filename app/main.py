@@ -73,10 +73,10 @@ def create_log(
     if ml_model and vectorizer:
         print("Model loaded successfully!")
         input_features = vectorizer.transform([log_in.message])
-        prediction=ml_model.predict(input_features)[0]
-        is_anomaly=True if int(prediction)==-1 else False
+        score=ml_decision_function(input_features)[0]
+        is_anomaly=True if score < 0.05 else False
         print(f"DEBUG: message={log_in.message}")
-        print(f"DEBUG: prediction_raw={prediction}")
+        print(f"DEBUG: score={score}")
         print(f"DEBUG:  is_anomaly={is_anomaly}")
         
     #異常なら通知を実行
