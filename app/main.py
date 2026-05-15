@@ -21,8 +21,8 @@ model_path = os.path.join(base_dir, "ml", "log-anomaly-detector.pkl")
 try:
     print(f"DEBUG: Trying to load model from: {model_path}") # これでどこを探してるか分かります
     ml_model = joblib.load(model_path)
-    vectorizer=ml_model["vectorizer"]
-    ml_model=ml_model["model"]
+    vectorizer=ml_model[1]
+    ml_model=ml_model[0]
     print("✅ SUCCESS: Model loaded successfully!")
 except Exception as e:
     print(f"❌ ERROR: Model load failed: {e}")
