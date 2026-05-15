@@ -73,7 +73,7 @@ def create_log(
     if ml_model and vectorizer:
         print("Model loaded successfully!")
         input_features = vectorizer.transform([log_in.message])
-        score=ml_decision_function(input_features)[0]
+        score=ml_model.decision_function(input_features)[0]
         is_anomaly=True if score < 0.05 else False
         print(f"DEBUG: message={log_in.message}")
         print(f"DEBUG: score={score}")
