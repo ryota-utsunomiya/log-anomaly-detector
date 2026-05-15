@@ -16,11 +16,13 @@ app=FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(base_dir, "ml", "bgl_logistic_model.pkl")
+model_path = os.path.join(base_dir, "ml", "log-anomaly-detector.pkl")
 
 try:
     print(f"DEBUG: Trying to load model from: {model_path}") # これでどこを探してるか分かります
     ml_model = joblib.load(model_path)
+    vectorizer=ml_model["vectorizer"]
+    ml_model=ml_model["model"]
     print("✅ SUCCESS: Model loaded successfully!")
 except Exception as e:
     print(f"❌ ERROR: Model load failed: {e}")
@@ -64,23 +66,18 @@ def create_log(
     db: Session=Depends(database.get_db),
     current_user: str=Depends(get_current_user)
 ):
-  
-    
-    input_data=pd.DataFrame([{
-        "content": log_in.message
-    }])
 
     #推論
     is_anomaly=False
     
-    if ml_model:
+    if ml_model and vectorizer:
         print("Model loaded successfully!")
-        input_data=input_data[['content']]
-        probabilities = ml_model.predict_proba(input_data)[0]
-        print(f"DEBUG: Probabilities: Normal={probabilities[0]:.4f}, Anomaly={probabilities[1]:.4f}")
-        prediction=ml_model.predict(input_data)[0]
+        input_features = vectorizer.transform([log_in.message])
+        prediction=ml_model.predict(input_features)[0]
         is_anomaly=True if int(prediction)==1 else False
-        print(f"DEBUG: prediction_raw={prediction}, is_anomaly={is_anomaly}")
+        print(f"DEBUG: message={log_in.message}")
+        print(f"DEBUG: prediction_raw={prediction}")
+        print(f"DEBUG:  is_anomaly={is_anomaly}")
         
     #異常なら通知を実行
     if is_anomaly:
