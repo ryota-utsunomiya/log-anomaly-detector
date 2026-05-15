@@ -74,7 +74,7 @@ def create_log(
         print("Model loaded successfully!")
         input_features = vectorizer.transform([log_in.message])
         prediction=ml_model.predict(input_features)[0]
-        is_anomaly=True if int(prediction)==1 else False
+        is_anomaly=True if int(prediction)==-1 else False
         print(f"DEBUG: message={log_in.message}")
         print(f"DEBUG: prediction_raw={prediction}")
         print(f"DEBUG:  is_anomaly={is_anomaly}")
