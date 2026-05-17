@@ -88,7 +88,7 @@ def create_log(
         cleaned_message = preprocess_payload(log_in.message)
         input_features = vectorizer.transform([cleaned_message])
         score=ml_model.decision_function(input_features)[0]
-        is_anomaly=True if score < 0.09 else False
+        is_anomaly=True if score > 0.06 else False
         print(f"DEBUG: message={log_in.message}")
         print(f"DEBUG: score={score}")
         print(f"DEBUG:  is_anomaly={is_anomaly}")
