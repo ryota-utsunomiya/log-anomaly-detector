@@ -9,6 +9,7 @@ from . import models,auth,database,schemas
 from .database import SessionLocal, engine, get_db
 from .services.notifier import send_discord_notification
 import os
+import re
 
 
 app=FastAPI()
@@ -57,7 +58,19 @@ def login(form_data: OAuth2PasswordRequestForm=Depends(),db:Session=Depends(data
         raise HTTPException(status_code=401,detail="名前かパスワードが違います")
     token=auth.create_access_token({"sub":user.username})
     return{"access_token":token,"token_type":"bearer"}
-    
+ 
+def preprocess_payload(text):
+    """
+    あらゆる未知の攻撃に対応するため、すべての『値』を完全に抽象化する汎用前処理
+    """
+    if not isinstance(text, str):
+        text = str(text)
+        
+    text = text.lower() # 小文字に統一
+    text = re.sub(r'\d+', '[NUM]', text) # 数値を一括置換
+    text = re.sub(r'(=)[a-zA-Z_0-9]+', r'=[VAL]', text) # 変数の値を一括置換
+    return text
+   
 #ログ投稿
 @app.post("/logs")
 def create_log(
@@ -72,7 +85,8 @@ def create_log(
     
     if ml_model and vectorizer:
         print("Model loaded successfully!")
-        input_features = vectorizer.transform([log_in.message])
+        cleaned_message = preprocess_payload(log_in.message)
+        input_features = vectorizer.transform([cleaned_message])
         score=ml_model.decision_function(input_features)[0]
         is_anomaly=True if score < 0.09 else False
         print(f"DEBUG: message={log_in.message}")
