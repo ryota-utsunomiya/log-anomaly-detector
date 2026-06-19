@@ -20,13 +20,13 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(base_dir, "ml", "log-anomaly-detector.pkl")
 
 try:
-    print(f"DEBUG: Trying to load model from: {model_path}") # これでどこを探してるか分かります
+    print(f"DEBUG: Trying to load model from: {model_path}") 
     ml_model = joblib.load(model_path)
     vectorizer=ml_model[1]
     ml_model=ml_model[0]
-    print("✅ SUCCESS: Model loaded successfully!")
+    print("SUCCESS: Model loaded successfully!")
 except Exception as e:
-    print(f"❌ ERROR: Model load failed: {e}")
+    print(f" ERROR: Model load failed: {e}")
     ml_model = None
 
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="login")
@@ -44,7 +44,7 @@ def get_current_user(token:str=Depends(oauth2_scheme)):
  
  #サインアップ   
 @app.post("/signup")
-def login(username:str,password:str,db:Session=Depends(database.get_db)):
+def signup(username:str,password:str,db:Session=Depends(database.get_db)):
     user=models.User(username=username,hashed_password=auth.get_password_hash(password))
     db.add(user)
     db.commit()
@@ -59,10 +59,8 @@ def login(form_data: OAuth2PasswordRequestForm=Depends(),db:Session=Depends(data
     token=auth.create_access_token({"sub":user.username})
     return{"access_token":token,"token_type":"bearer"}
  
+ #前処理
 def preprocess_payload(text):
-    """
-    あらゆる未知の攻撃に対応するため、すべての『値』を完全に抽象化する汎用前処理
-    """
     if not isinstance(text, str):
         text = str(text)
         
